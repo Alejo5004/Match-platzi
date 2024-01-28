@@ -12,9 +12,17 @@ public class Board : MonoBehaviour
     public float cameraVerticalOffset;
     public GameObject[] availablePieces;
 
+    Tile[,] Tiles;
+    Piece[,] Pieces;
+
+    Tile startTile;
+    Tile endTile;
+
     // Start is called before the first frame update
     void Start()
     {
+        Tiles = new Tile[width, height];
+        Pieces = new Piece[width, height];
         SetupBoard();
         PositionCamera();
         SetupPieces();
@@ -29,7 +37,8 @@ public class Board : MonoBehaviour
                 var selectdPiece = availablePieces[UnityEngine.Random.Range(0, availablePieces.Length)];
                 var ins = Instantiate(selectdPiece, new Vector3(x, y, -5), Quaternion.identity); // Muestra los square vacios
                 ins.transform.parent = transform;
-                ins.GetComponent<Piece>()?.Setup(x, y, this);
+                Pieces[x, y] = ins.GetComponent<Piece>();
+                Pieces[x, y]?.Setup(x, y, this);
             }
         }
     }
@@ -54,9 +63,43 @@ public class Board : MonoBehaviour
             {
                 var ins = Instantiate(tileObject, new Vector3(x,y, -5), Quaternion.identity); // Muestra los square vacios
                 ins.transform.parent = transform;
-                ins.GetComponent<Tile>()?.Setup(x, y, this);
+                Tiles[x, y] = ins.GetComponent<Tile>();
+                Tiles[x, y]?.Setup(x, y, this);
             }
         }
+    }
+
+    public void TileDown(Tile tile_)
+    {
+        startTile = tile_;
+    }
+
+    public void TileOver(Tile tile_)
+    {
+        endTile = tile_;
+    }
+
+    public void TileUp(Tile tile_)
+    {
+        if (startTile != null && endTile != null)
+        {
+            SwapTiles();
+        }
+
+        startTile = null;
+        endTile = null;
+    }
+
+    private void SwapTiles()
+    {
+        var StartPiece = Pieces[startTile.x, startTile.y];
+        var EndPiece = Pieces[endTile.x, endTile.y];
+
+        StartPiece.Move(endTile.x, endTile.y);
+        EndPiece.Move(startTile.x, startTile.y);
+
+        Pieces[startTile.x, startTile.y] = EndPiece;
+        Pieces[endTile.x, endTile.y] = StartPiece;
     }
 
     // Update is called once per frame
